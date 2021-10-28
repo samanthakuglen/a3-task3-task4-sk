@@ -1,0 +1,53 @@
+---
+title: "A3 Task 3"
+author: "Samantha Kuglen"
+date: "10/24/2021"
+output: html_document
+---
+
+```{r setup, include=TRUE, warning = FALSE, messages = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, messages = FALSE)
+
+library(here)
+library(tidyverse)
+library(janitor)
+```
+
+## Read in Data
+```{r}
+urchins_data <- read_csv(here("data", "urchins.csv")) %>% 
+  clean_names()
+```
+
+## Compare Distribution of Purple and Red Urchins
+```{r}
+# Compare distribution of sizes between purple and red urchins with a finalized, faceted histogram with 10 bins
+
+ggplot(urchins_data, aes(x = size, fill = common_name, color = common_name)) +
+  geom_histogram(position = "identity", 
+                 alpha = 0.5,
+                 bins = 10) +
+  facet_wrap(~common_name) +
+  labs(x = "Size(cm)", 
+       y = "Urchins (#)",
+       title = "Size Distribution of Purple and Red Urchins") +
+  theme(
+    plot.title = element_text(hjust = 0.5)) +
+  theme_minimal()
+```
+
+## Descriptive Statistics Table
+```{r}
+# Create a finalized summary table that contains the following statistics for purple and red urchins, ignoring site as a variable
+
+urchins_statistics <- urchins_data %>% 
+  group_by(common_name) %>% 
+  summarize(
+    mean_size = mean(size),
+    median_size = median(size),
+    sd_size = sd(size),
+    sample_size = n())
+
+kable_Extra(urchins_statistics)
+```
+
