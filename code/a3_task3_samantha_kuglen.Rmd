@@ -23,7 +23,7 @@ library(kableExtra)
 
 ## Read in Data
 ```{r}
-# Store data as new object `urchins_data` and convert col names to lower snake case as dates to YYYY-MM-DD
+# Store data as new object `urchins_data` and convert col names to lower snake case
 urchins_data <- read_csv(here("data", "urchins.csv")) %>% 
   clean_names()
 ```
@@ -74,8 +74,7 @@ urchins_statistics %>%
                       digits = 1, # changes sig figs
                       caption = "Table 1 - ") %>% 
   kable_styling(full_width = FALSE,
-                html_font = "Cambria",
-                position = "center")
+                html_font = "Times New Roman")
 
   
 ```

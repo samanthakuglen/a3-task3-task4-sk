@@ -1,0 +1,90 @@
+---
+title: "Task 4 - Naples Reef Purple Urchins"
+author: "Samantha Kuglen"
+date: "10/29/2021"
+output: html_document
+---
+## Overview: 
+
+## Data Citation: 
+
+```{r setup, include=TRUE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+# Attach packages
+library(here)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(kableExtra)
+```
+
+## Read in the data
+```{r}
+# Store data as new object `urchins_data`, convert col names to lower snake case, convert date to "Date" class and add a new column for year to use as a variable for filtering
+urchins_data <- read_csv(here("data", "urchins.csv")) %>% 
+  clean_names() %>% 
+  mutate(date = mdy(date)) %>% 
+  mutate(year = year(date))
+```
+
+## Data Wrangling
+```{r}
+# Compare mean size of Naples 2010 purple urchins in CONTROL and ANNUAL treatments
+naples_purple_urchins <- urchins_data %>% 
+  filter(year %in% c("2010"), 
+         common_name %in% c("Purple Urchin"), 
+         site %in% "NAPL") 
+
+naples_stats_2010 <- naples_purple_urchins %>% 
+  group_by(treatment) %>% 
+  summarize(mean_size = round(mean(size, na.rm = TRUE), 1),
+            median_size = round(median(size, na.rm = TRUE), 1),
+            sd_size = round(sd(size, na.rm = TRUE), 1),
+            sample_size = n()) 
+
+```
+
+## Data Visualization: Exploratory
+Exploratory Faceted Histograms and QQ-plots for the size distribution of purple urchins at Naples in 2010, separated by treatment (Control and Annual) to assess normality. 
+
+```{r}
+# Histogram
+ggplot(naples_purple_urchins, aes(x = size, fill = treatment, color = treatment)) +
+  geom_histogram(bins = 10, 
+                 alpha = 0.5) +
+  facet_wrap(~ treatment) +
+  labs(x = "Size (cm)",
+       y = "Number of Urchins",
+       title = "Size Distribution of Naples Urchins By Treatment in 2010 (KUGLEN)",
+       subtitle = "Annual (Kelp Removal) vs Control (No Kelp Removal)",
+       color = "Treatment",
+       fill = "Treatment") + 
+  theme(plot.title = element_text(hjust = 0.5,
+                                  vjust = 0.2),
+        plot.subtitle = element_text(hjust = 0.5,
+                                     vjust = 0.2)) 
+
+# QQ Plot
+ggplot(naples_purple_urchins, aes(sample = size)) + 
+  geom_qq()+
+  facet_wrap(~treatment)
+         
+```
+
+The distribution of purple urchin sizes
+
+## Data Visualization II: Finalized
+Summary table of descriptive statistics for both groups. 
+```{r}
+naples_stats_2010 %>% 
+  kable(col.names = c("Treatment Type",
+                      "Mean (cm)",
+                      "Median (cm)",
+                      "Standard Deviation (cm)",
+                      "Sample Size (n)"),
+        caption = "Table 1: Comparison of Naples Reef Purple Urchin Sizes (cm) from Annual and Control Treatments in 2010") %>% 
+  kable_styling(full_width = FALSE,
+                html_font = "Times New Roman")
+```
+
