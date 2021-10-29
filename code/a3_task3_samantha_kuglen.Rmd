@@ -4,50 +4,121 @@ author: "Samantha Kuglen"
 date: "10/24/2021"
 output: html_document
 ---
+## Overview
 
-```{r setup, include=TRUE, warning = FALSE, messages = FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, messages = FALSE)
+## Data Citation
 
+## Setup 
+```{r setup, include=TRUE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+# Attach packages
 library(here)
 library(tidyverse)
 library(janitor)
+library(lubridate)
+library(kableExtra)
+
 ```
 
 ## Read in Data
 ```{r}
+# Store data as new object `urchins_data` and convert col names to lower snake case as dates to YYYY-MM-DD
 urchins_data <- read_csv(here("data", "urchins.csv")) %>% 
   clean_names()
 ```
 
-## Compare Distribution of Purple and Red Urchins
-```{r}
-# Compare distribution of sizes between purple and red urchins with a finalized, faceted histogram with 10 bins
+## A I: Data Visualization
+### Compare Distribution of Purple and Red Urchins
+Compare distribution of sizes between purple and red urchins with a finalized, faceted histogram, each with 10 bins.
+```{r, Fig Cap: }
 
-ggplot(urchins_data, aes(x = size, fill = common_name, color = common_name)) +
+ggplot(urchins_data, aes(x = size, color = common_name, fill = common_name)) +
   geom_histogram(position = "identity", 
                  alpha = 0.5,
                  bins = 10) +
   facet_wrap(~common_name) +
-  labs(x = "Size(cm)", 
-       y = "Urchins (#)",
-       title = "Size Distribution of Purple and Red Urchins") +
+  labs(x = "Size (cm)", 
+       y = "# of Urchins",
+       title = "Size Distribution of Purple and Red Urchins",
+       color = "Common Name",
+       fill = "Common Name") + # prevents duplicate legend
+  scale_fill_manual(values = c("purple","red")) +
+  scale_color_manual(values = c("purple","red")) +
   theme(
     plot.title = element_text(hjust = 0.5)) +
-  theme_minimal()
+  theme_minimal() 
+    
+  
 ```
 
-## Descriptive Statistics Table
-```{r}
+## 3A II: Descriptive Statistics Table
+### Create a summary table of statistics for purple and red urchins
+```{r, fig.cap='Caption blah'}
 # Create a finalized summary table that contains the following statistics for purple and red urchins, ignoring site as a variable
 
 urchins_statistics <- urchins_data %>% 
   group_by(common_name) %>% 
   summarize(
-    mean_size = mean(size),
-    median_size = median(size),
-    sd_size = sd(size),
+    mean_size = round(mean(size, na.rm = TRUE), 1),
+    median_size = round(median(size, na.rm = TRUE), 1),
+    sd_size = round(sd(size, na.rm = TRUE), 1),
     sample_size = n())
 
-kable_Extra(urchins_statistics)
+urchins_statistics %>% 
+  kable(col.names = c("Species",
+                      "Mean (cm)",
+                      "Median (cm)",
+                      "Standard Deviation (cm)",
+                      "Sample size (n)"),
+                      digits = 1, # changes sig figs
+                      caption = "Table 1 - ") %>% 
+  kable_styling(full_width = FALSE,
+                html_font = "Cambria",
+                position = "center")
+
+  
 ```
+3A III: Actual and % difference in mean urchin diameter
+
+## 3B I: 
+```{r}
+purple_urchins <- urchins_data %>% 
+  filter(common_name == "Purple Urchin") %>% 
+  mutate(date = mdy(date)) %>% 
+  mutate(year_new = year(date)) %>% 
+  mutate(site_full = case_when(
+    site == "NAPL" ~ "Naples Reef",
+    site == "AQUE" ~ "Arroyo Quemado Reef",
+    site == "CARP" ~ "Carpinteria Reef",
+    site == "MOHK" ~ "Mohawk Reef",
+    site == "IVEE" ~ "Isla Vista Reef"
+  ))
+```
+
+## 3B II:
+```{r}
+total_purple_urchins <- purple_urchins %>% 
+  group_by(site_full, year_new) %>% 
+  summarize(purple_sample_size = n())
+
+total_purple_urchins
+```
+
+```{r}
+ggplot(total_purple_urchins, aes(x = year_new, y = purple_sample_size))+
+  geom_line(aes(color = site_full),
+            alpha = 0.6,
+            size = 1) +
+  scale_color_manual(values = c("blue", "orange", "red", "purple", "green")) +
+  scale_x_continuous(breaks = seq(2008, 2020, 1)) +
+  scale_y_continuous(breaks = seq(min(0), max(1500), by = 100)) + 
+  labs(x = "Year",
+       y = "Number of Purple Urchins",
+       color = "Research Site",
+       title = "Total Number of Purple Urchins at Each Site Per Year (KUGLEN)")
+  theme_linedraw() 
+  
+```
+The graph reflects changes in the search urchin population. Take into account -- to determine whether the changes in counts by year are reflective of actual changes in urchin population. Other possible explanations in changes for the number of purple urchins observed are
 
